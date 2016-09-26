@@ -1,40 +1,27 @@
 package com.bluetoothtest1.activity;
-
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.ContentValues;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.bluetoothtest1.bluetoothTools.BluetoothService;
 import com.bluetoothtest1.excel.ExcelUtils;
-import com.bluetoothtest1.mysql.SQLiteHelper;
-
 import java.io.File;
 
-import jxl.Workbook;
-import jxl.write.Label;
-import jxl.write.WritableSheet;
-import jxl.write.WritableWorkbook;
 
 /**
  * Created by Administrator on 2016/9/15.
  */
 public class AcceptActivity extends Activity implements View.OnClickListener {
-
 
     //Debug检查
     private static final boolean D = true;
@@ -47,15 +34,10 @@ public class AcceptActivity extends Activity implements View.OnClickListener {
 
     //
     private ExcelUtils excelUtils = new ExcelUtils();
-    private  File file ;
+    private File file;
+    private int num = 1;
+    String readMessage = null;
 
-
-
-
-    private SQLiteHelper dbHelper;
-    private SQLiteDatabase db;
-
-    private ContentValues values;
 
     //数据显示布局
     StringBuffer readData = new StringBuffer();
@@ -64,11 +46,8 @@ public class AcceptActivity extends Activity implements View.OnClickListener {
 
     //连接状态显示
     private TextView connectDevices;
-    private TextView issave, isaccept;
+    private TextView issave;
 
-
-
-    private String name;
 
     //连接蓝牙名称
     private String mConnectedDeviceName = null;
@@ -86,7 +65,7 @@ public class AcceptActivity extends Activity implements View.OnClickListener {
     public static final int MESSAGE_DEVICE_NAME = 4;
     public static final int MESSAGE_TOAST = 5;
 
-    private int isSave = 1, isAccept = 1;
+    private int isSave = 1;
     //请求连接的requestCode
     static final int REQUEST_CONNECT_DEVICE = 2;
     // The Handler that gets information back from the BluetoothChatService
@@ -118,6 +97,7 @@ public class AcceptActivity extends Activity implements View.OnClickListener {
                     break;
                 case MESSAGE_WRITE:
                     byte[] writeBuf = (byte[]) msg.obj;
+                    msg.obj = null;
                     // construct a string from the buffer
                     //  String writeMessage = new String(writeBuf);
                     //   mConversationArrayAdapter.add("Me:  " + writeMessage);
@@ -125,28 +105,29 @@ public class AcceptActivity extends Activity implements View.OnClickListener {
 
 
                 case MESSAGE_READ:
+
                     byte[] readBuf = (byte[]) msg.obj;
-                    String readMessage = new String(readBuf, 0, msg.arg1);
 
-                    if (isAccept < 0) {
+                    String read = new String(readBuf, 0, msg.arg1);
+
+                    String read2[] = read.split("c");
+
+                    if (read2.length > 1) {
+                        readMessage = read2[read2.length - 1];
+                    }
+
+                    if (readMessage != null && !readMessage.equals(" ")) {
                         readData.append(readMessage + "\n");
-                        listView.setText(readData.toString());
-                        if (isSave < 0) {
-                            //添加到数据库
-                            db = dbHelper.getWritableDatabase();
-                            values = new ContentValues();
-                            values.put("data", readMessage);
-                            Long insert = db.insert("DateKu", null, values);
-
-                            //保存到本地
-                            if (insert > 0) {
-                                Log.i(TAG, "insert =" + insert);
-                                name = String.valueOf(insert);
-                               excelUtils.writeToExcel(file ,name, readMessage);
-                            }
-                            values.clear();
+                        listView.setText(readData);
+                    }
+                    if (isSave < 0) {
+                        if (readMessage != null && !readMessage.equals(" ")) {
+                            num++;
+                            excelUtils.writeToExcel(file, String.valueOf(num), readMessage);
                         }
                     }
+                    readMessage = null;
+
                     break;
                 case MESSAGE_DEVICE_NAME:
                     // save the connected device's name
@@ -168,28 +149,25 @@ public class AcceptActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.accept);
+
         //获取本地蓝牙
         bluetooth = BluetoothAdapter.getDefaultAdapter();
-        //创建数据库
-        dbHelper = new SQLiteHelper(this, "Date.db", null, 2);
+
         //创建表格
-        file = excelUtils.setPath("mydata") ;
+        file = excelUtils.setPath("mydata");
         excelUtils.createExcel(file);
 
         connectDevices = (TextView) findViewById(R.id.connected_device);
         listView = (EditText) findViewById(R.id.listview);
-        isaccept = (TextView) findViewById(R.id.accept1);
         issave = (TextView) findViewById(R.id.save1);
 
-        //按键监听事件 scan ,clear ,accept ,save
+        //按键监听事件 scan ,clear ,save
         scan = (Button) findViewById(R.id.contentbnt);
         clear = (Button) findViewById(R.id.clearRx);
-        accept = (Button) findViewById(R.id.accept_data);
         save = (Button) findViewById(R.id.saveData);
 
         scan.setOnClickListener(this);
         clear.setOnClickListener(this);
-        accept.setOnClickListener(this);
         save.setOnClickListener(this);
     }
 
@@ -208,23 +186,14 @@ public class AcceptActivity extends Activity implements View.OnClickListener {
                 listView.setText("");
                 readData = new StringBuffer();
                 break;
-            //接收
-            case R.id.accept_data:
-                isAccept = ~isAccept;
-                if (isAccept < 0) {
-                    isaccept.setText("可以接收");
-                } else {
-                    isaccept.setText("不可接收");
-                }
-                break;
+
             //保存
             case R.id.saveData:
-
                 isSave = ~isSave;
                 if (isSave < 0) {
                     issave.setText("可以保存");
-                    Intent intent = new Intent(AcceptActivity.this,SavePathActivity.class);
-                    startActivityForResult(intent,3);
+                    Intent intent = new Intent(AcceptActivity.this, SavePathActivity.class);
+                    startActivityForResult(intent, 3);
 
                 } else {
                     issave.setText("不可保存");
@@ -248,17 +217,18 @@ public class AcceptActivity extends Activity implements View.OnClickListener {
                     mCommService.connect(device);
                 }
                 break;
-            case  3:
-                if(resultCode == Activity.RESULT_OK){
+            case 3:
+                if (resultCode == Activity.RESULT_OK) {
                     String pathStr = data.getStringExtra("data_return");
-                    Log.i(TAG,"路径："+ pathStr);
+                    Log.i(TAG, "路径：" + pathStr);
                     //创建表格
-                    file = excelUtils.setPath(pathStr) ;
+                    file = excelUtils.setPath(pathStr);
                     excelUtils.createExcel(file);
                 }
                 break;
         }
     }
+
     @Override
     protected void onStart() {
         super.onStart();

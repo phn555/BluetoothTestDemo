@@ -7,17 +7,12 @@ import android.content.Context;
 import android.content.Intent;
 
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.bluetoothtest1.bluetoothTools.BluetoothService;
 
 
 public class MainActivity extends Activity implements View.OnClickListener {
@@ -100,7 +95,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
             Intent displayIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
             //设置最长蓝牙可见时间
-            displayIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 10);
+            displayIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
             startActivity(displayIntent);
         } else {
             is_Discoverable.setText("开");

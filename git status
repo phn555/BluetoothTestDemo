@@ -1,0 +1,26 @@
+[1mdiff --git a/app/src/main/java/com/bluetoothtest1/activity/AcceptActivity.java b/app/src/main/java/com/bluetoothtest1/activity/AcceptActivity.java[m
+[1mindex 68a7065..9b3c701 100644[m
+[1m--- a/app/src/main/java/com/bluetoothtest1/activity/AcceptActivity.java[m
+[1m+++ b/app/src/main/java/com/bluetoothtest1/activity/AcceptActivity.java[m
+[36m@@ -205,7 +205,7 @@[m [mpublic class AcceptActivity extends Activity implements View.OnClickListener {[m
+                 break;[m
+             //清除[m
+             case R.id.clearRx:[m
+[31m-                listView.setText("");[m
+[32m+[m[32m                listView.setText("no data");[m
+                 readData = new StringBuffer();[m
+                 break;[m
+             //接收[m
+[1mdiff --git a/app/src/main/java/com/bluetoothtest1/bluetoothTools/BluetoothService.java b/app/src/main/java/com/bluetoothtest1/bluetoothTools/BluetoothService.java[m
+[1mindex 051d432..c9f2777 100644[m
+[1m--- a/app/src/main/java/com/bluetoothtest1/bluetoothTools/BluetoothService.java[m
+[1m+++ b/app/src/main/java/com/bluetoothtest1/bluetoothTools/BluetoothService.java[m
+[36m@@ -241,7 +241,7 @@[m [mpublic class BluetoothService {[m
+             try {[m
+                 tmp = mAdapter.listenUsingRfcommWithServiceRecord(NAME, SPP_UUID);[m
+             } catch (IOException e) {[m
+[31m-             //   Log.e(TAG, "listen() failed", e);[m
+[32m+[m[32m                Log.e(TAG, "listen() failed", e);[m
+             }[m
+             //得到BluetoothServerSocket对象[m
+             mmServerSocket = tmp;[m
